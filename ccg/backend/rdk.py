@@ -40,13 +40,13 @@ class RDKitMol(object):
         Args:
             rd_mol (Chem.rdchem.Mol): The RDKit Chem.rdchem.Mol molecule to be converted.
         """
-        for attr in dir(rd_mol):
+        self._rd_mol = rd_mol
+        for attr in dir(self._rd_mol):
             # Not reset private properties and repeated properties
             if not attr.startswith('_') and not hasattr(self, attr):
-                setattr(self, attr, getattr(rd_mol, attr,))
+                setattr(self, attr, getattr(self._rd_mol, attr,))
             elif attr in KEEP_RDMOL_ATTRIBUTES:
-                setattr(self, attr, getattr(rd_mol, attr,))
-            self._rd_mol = rd_mol
+                setattr(self, attr, getattr(self._rd_mol, attr,))
 
     @ classmethod
     def FromSmiles(cls,
@@ -440,18 +440,18 @@ class RDKitConf(object):
             ValueError: Not a valid ``rd_mol`` input, when giving something else.
         """
         try:
-            num_atoms = len(coords)
-        except TypeError:
+            num_atoms = coords.shape[0]
+        except AttributeError:
             try:
-                num_atoms = coords.shape[0]
+                num_atoms = len(coords)
                 for i in range(num_atoms):
-                    self._conf.SetAtomPosition(i, coords[i, :])
+                    self._conf.SetAtomPosition(i, coords[i])
             except:
                 raise ValueError(
                     'Given coords is not valid for the conformer.')
         else:
             for i in range(num_atoms):
-                self._conf.SetAtomPosition(i, coords[i])
+                self._conf.SetAtomPosition(i, coords[i, :])
 
     def GetTorsionDeg(self,
                       torsion: list,
